@@ -4,6 +4,8 @@ A menu-bar-only macOS app (no Dock icon) that plays the live streams of Commerci
 Hong Kong's CR1 (881) and CR2 (903). Built with **Tauri v2**, Rust and vanilla TypeScript.
 The design handoff is in [`design/`](design/).
 
+![Radio menu bar popover showing the paused CR2 stream](docs/images/radio-popover.png)
+
 ## Run it
 
 Requirements: macOS 12+, Node 20.19+ (20.x) or 22.12+, pnpm, Rust (`rustup`), Xcode Command Line Tools.
