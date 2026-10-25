@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Radio — Logs</title>
+    <link rel="stylesheet" href="/src/logs.css" />
+    <script type="module" src="/src/logs.ts" defer></script>
+  </head>
+  <body>
+    <header class="toolbar">
+      <div class="toolbar-row">
+        <div class="segmented" role="tablist" aria-label="View">
+          <button id="tab-logs" role="tab" aria-selected="true" class="seg on">Logs</button>
+          <button id="tab-net" role="tab" aria-selected="false" class="seg">Network</button>
+        </div>
+        <div class="spacer"></div>
+        <button id="btn-clear" class="btn" title="Clear the entries in this tab">Clear</button>
+        <button id="btn-copy" class="btn" title="Copy the visible rows as text">Copy</button>
+        <button id="btn-export" class="btn" title="Save the visible rows as .txt or .json">Export…</button>
+        <button id="btn-reveal" class="btn" title="Show the log file in Finder">Reveal Log File</button>
+      </div>
+      <div class="toolbar-row">
+        <input id="search" class="search" type="search" placeholder="Search" autocomplete="off" spellcheck="false" />
+        <div id="levels" class="chips" role="group" aria-label="Levels">
+          <button class="chip on" data-level="debug">Debug</button>
+          <button class="chip on" data-level="info">Info</button>
+          <button class="chip on" data-level="warn">Warn</button>
+          <button class="chip on" data-level="error">Error</button>
+        </div>
+        <label id="seg-toggle" class="check" hidden><input id="show-segments" type="checkbox" /> Show individual segments</label>
+        <div class="spacer"></div>
+        <label class="check sensitive"><input id="reveal" type="checkbox" /> Show sensitive values</label>
+      </div>
+    </header>
+
+    <main class="main">
+      <section id="pane-logs" class="pane">
+        <div class="scroller" id="scroll-logs">
+          <table class="grid logs">
+            <colgroup><col style="width: 104px" /><col style="width: 62px" /><col style="width: 140px" /><col /></colgroup>
+            <thead><tr><th>Time</th><th>Level</th><th>Source</th><th>Message</th></tr></thead>
+            <tbody id="logs-body"></tbody>
+          </table>
+          <div id="logs-empty" class="empty">No log entries</div>
+        </div>
+      </section>
+
+      <section id="pane-net" class="pane" hidden>
+        <div class="split">
+          <div class="scroller" id="scroll-net">
+            <table class="grid net">
+              <colgroup id="net-cols"></colgroup>
+              <thead><tr id="net-head"></tr></thead>
+              <tbody id="net-body"></tbody>
+            </table>
+            <div id="net-empty" class="empty">No requests yet. Start playback to see stream traffic.</div>
+          </div>
+          <aside id="detail" class="detail" hidden>
+            <div class="detail-head">
+              <span id="detail-title" class="detail-title"></span>
+              <button id="detail-close" class="icon-btn" aria-label="Close details">✕</button>
+            </div>
+            <div id="detail-body" class="detail-body"></div>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <footer class="statusbar">
+      <span id="count"></span>
+      <span id="flash" class="flash"></span>
+      <span class="spacer"></span>
+      <span id="logfile" class="logfile"></span>
+    </footer>
+  </body>
+</html>
