@@ -6,6 +6,26 @@ The design handoff is in [`design/`](design/).
 
 ![Radio menu bar popover showing the paused CR2 stream](docs/images/radio-popover.png)
 
+## Install
+
+1. Download `Radio_x.y.z_universal.dmg` from the [latest release](https://github.com/callyberz/radio-menubar/releases/latest).
+2. Open it and drag **Radio** to **Applications**.
+3. The app isn't signed yet, so on first launch right-click Radio in Applications → **Open** → **Open**
+   (or run `xattr -dr com.apple.quarantine /Applications/Radio.app`). After that it opens normally.
+
+Radio lives in the menu bar (no Dock icon).
+
+## Releasing
+
+Bump `version` in `src-tauri/tauri.conf.json` (and `package.json`), then push a matching tag:
+
+```sh
+git tag v0.1.0 && git push origin v0.1.0
+```
+
+[`.github/workflows/release.yml`](.github/workflows/release.yml) builds a universal DMG and
+creates a **draft** release with it attached. Check it on GitHub and press **Publish**.
+
 ## Run it
 
 Requirements: macOS 12+, Node 20.19+ (20.x) or 22.12+, pnpm, Rust (`rustup`), Xcode Command Line Tools.

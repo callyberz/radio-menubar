@@ -1,0 +1,51 @@
+# Builds a universal (Apple Silicon + Intel) DMG and attaches it to a GitHub Release.
+# Trigger: push a tag like v0.1.0 (or run manually from the Actions tab).
+# The app is unsigned for now; see "Install" in the README for the first-launch step.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || 'v__VERSION__' }}
+          releaseName: Radio ${{ github.ref_type == 'tag' && github.ref_name || 'v__VERSION__' }}
+          releaseBody: |
+            Download `Radio_*_universal.dmg`, open it and drag **Radio** to Applications.
+
+            This build is not signed yet. The first time, right-click Radio in Applications → **Open** → **Open**,
+            or run `xattr -dr com.apple.quarantine /Applications/Radio.app`.
+          releaseDraft: true
+          args: --target universal-apple-darwin
