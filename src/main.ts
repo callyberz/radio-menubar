@@ -177,6 +177,7 @@ function runRetry() {
 }
 
 function setPlaying(on: boolean) {
+  resumeOnWake = false; // any explicit play/pause supersedes a pending system resume
   if (
     on === state.wantPlaying &&
     (on ? state.conn !== "idle" : state.conn === "idle")
@@ -504,13 +505,43 @@ function updateMediaSession(prog: Programme | null) {
     console.warn("mediaSession", e);
   }
 }
+// Since macOS 27, WebKit interrupts the Media Session on system sleep and, on wake, calls our
+// `play` handler to "resume" it, even if the user had paused (its internal state stays
+// `Playing`). Rust tells us when the Mac is locked/asleep (`system-away`), and we only honour
+// a `play` in that window if it was the system, not the user, that paused us.
+const SYSTEM_RESUME_GRACE_MS = 5000;
+let systemAway = false;
+let systemBackAt = 0;
+let resumeOnWake = false;
+const nearSystemTransition = () =>
+  systemAway || Date.now() - systemBackAt < SYSTEM_RESUME_GRACE_MS;
+
+function remotePlay() {
+  if (nearSystemTransition()) {
+    if (!resumeOnWake && !state.wantPlaying) {
+      plog("info", "ignored media-session play after lock/sleep (was paused)");
+      return;
+    }
+    plog("info", "media session: resuming after lock/sleep");
+  } else {
+    plog("info", "media session: play");
+  }
+  setPlaying(true);
+}
+function remotePause(action: string) {
+  const bySystem = nearSystemTransition() && state.wantPlaying;
+  plog("info", `media session: ${action}${bySystem ? " (lock/sleep)" : ""}`);
+  setPlaying(false);
+  resumeOnWake = bySystem; // after setPlaying, which clears it
+}
+
 function setupMediaSession() {
   const ms = navigator.mediaSession;
   if (!ms) return;
   const handlers: [MediaSessionAction, () => void][] = [
-    ["play", () => setPlaying(true)],
-    ["pause", () => setPlaying(false)],
-    ["stop", () => setPlaying(false)],
+    ["play", remotePlay],
+    ["pause", () => remotePause("pause")],
+    ["stop", () => remotePause("stop")],
     ["nexttrack", () => selectStation(state.station === "881" ? "903" : "881")],
     [
       "previoustrack",
@@ -687,6 +718,11 @@ async function boot() {
     state.sleepOpen = false;
     refreshLaunchAtLogin();
     render();
+  });
+
+  await listen<boolean>("system-away", (e) => {
+    systemAway = e.payload;
+    if (!systemAway) systemBackAt = Date.now();
   });
 
   setupMediaSession();
