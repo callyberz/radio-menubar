@@ -1,18 +1,53 @@
 # Builds a universal (Apple Silicon + Intel) DMG and attaches it to a GitHub Release.
-# Trigger: push a tag like v0.1.0 (or run manually from the Actions tab).
+# Triggers:
+#   * a push (merge) to master: releases v<version from tauri.conf.json>, but only if no
+#     release with that tag exists yet, so merges without a version bump don't rebuild;
+#   * pushing a tag like v0.1.0, or running it manually from the Actions tab.
 # The app is unsigned for now; see "Install" in the README for the first-launch step.
 name: Release
 
 on:
   push:
+    branches: [master]
     tags: ["v*"]
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.check.outputs.release }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+        run: |
+          version=$(jq -r .version src-tauri/tauri.conf.json)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [ "$EVENT" != "push" ] || [ "$REF_TYPE" = "tag" ]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"   # explicit tag push / manual run
+          elif gh release view "v$version" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "v$version is already released (or drafted); bump the version to release." >> "$GITHUB_STEP_SUMMARY"
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Releasing v$version" >> "$GITHUB_STEP_SUMMARY"
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          fi
+
   build-macos:
+    needs: check-version
+    if: needs.check-version.outputs.release == 'true'
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4

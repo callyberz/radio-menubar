@@ -17,14 +17,13 @@ Radio lives in the menu bar (no Dock icon).
 
 ## Releasing
 
-Bump `version` in `src-tauri/tauri.conf.json` (and `package.json`), then push a matching tag:
+Bump `version` in `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` and `package.json` in
+your PR, then merge it to `master`. [`.github/workflows/release.yml`](.github/workflows/release.yml)
+sees a version with no release yet, builds a universal DMG and creates a **draft** release
+`v<version>` with it attached. Check it on GitHub and press **Publish**.
 
-```sh
-git tag v0.1.0 && git push origin v0.1.0
-```
-
-[`.github/workflows/release.yml`](.github/workflows/release.yml) builds a universal DMG and
-creates a **draft** release with it attached. Check it on GitHub and press **Publish**.
+Merges that don't bump the version skip the build. To build without a merge, push a tag
+(`git tag v0.1.0 && git push origin v0.1.0`) or run the workflow from the Actions tab.
 
 ## Run it
 
