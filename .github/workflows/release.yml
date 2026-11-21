@@ -82,5 +82,5 @@ jobs:
 
             This build is not signed yet. The first time, right-click Radio in Applications → **Open** → **Open**,
             or run `xattr -dr com.apple.quarantine /Applications/Radio.app`.
-          releaseDraft: true
+          releaseDraft: false
           args: --target universal-apple-darwin
