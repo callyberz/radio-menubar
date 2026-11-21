@@ -3,6 +3,8 @@ mod diag;
 mod net;
 #[cfg(target_os = "macos")]
 mod popover_monitors;
+#[cfg(target_os = "macos")]
+mod power;
 mod proxy;
 mod redact;
 mod resolver;
@@ -364,6 +366,9 @@ pub fn run() {
             app.manage(proxy);
 
             tray::build(app.handle())?;
+
+            #[cfg(target_os = "macos")]
+            power::install(app.handle());
 
             if let Some(w) = popover(app.handle()) {
                 #[cfg(target_os = "macos")]
